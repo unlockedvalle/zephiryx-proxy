@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zephiryx Proxy - Navegación Segura</title>
+    <meta name="description" content="Zephiryx Proxy - Navegación web segura y privada con tecnología Ultraviolet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-top">
+                <div class="brand">
+                    <div class="logo">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 5L35 12.5V27.5L20 35L5 27.5V12.5L20 5Z" fill="url(#gradient)" stroke="#10b981" stroke-width="2"/>
+                            <path d="M20 15L28 19V25L20 29L12 25V19L20 15Z" fill="#065f46" stroke="#34d399" stroke-width="1.5"/>
+                            <defs>
+                                <linearGradient id="gradient" x1="5" y1="5" x2="35" y2="35">
+                                    <stop offset="0%" style="stop-color:#10b981"/>
+                                    <stop offset="100%" style="stop-color:#14b8a6"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <h1>Zephiryx Proxy</h1>
+                        <p class="status">
+                            <span class="status-icon">🛡️</span>
+                            <span id="status-text">Iniciando...</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="history-btn" title="Historial">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="favorites-btn" title="Favoritos">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation Bar -->
+            <div class="nav-bar">
+                <button class="nav-btn" id="back-btn" disabled title="Atrás">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <button class="nav-btn" id="forward-btn" disabled title="Adelante">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </button>
+                <button class="nav-btn" id="refresh-btn" disabled title="Recargar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <polyline points="1 20 1 14 7 14"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                </button>
+                <button class="nav-btn" id="home-btn" title="Inicio">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                </button>
+
+                <div class="url-bar">
+                    <svg class="url-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    <input type="text" id="url-input" placeholder="Ingresa una URL o busca...">
+                    <button class="clear-btn" id="clear-btn" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <button class="go-btn" id="go-btn" disabled>Ir</button>
+                <button class="icon-btn" id="star-btn" style="display: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar History -->
+    <div class="sidebar" id="history-sidebar">
+        <div class="sidebar-header">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                Historial
+            </h3>
+            <button class="close-sidebar" id="close-history">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="sidebar-content" id="history-list">
+            <p class="empty-message">No hay historial aún</p>
+        </div>
+    </div>
+
+    <!-- Sidebar Favorites -->
+    <div class="sidebar" id="favorites-sidebar">
+        <div class="sidebar-header">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                Favoritos
+            </h3>
+            <button class="close-sidebar" id="close-favorites">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="sidebar-content" id="favorites-list">
+            <p class="empty-message">No hay favoritos aún</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Home Page -->
+        <div id="home-page" class="home-page">
+            <div class="hero">
+                <h2>Bienvenido a Zephiryx Proxy</h2>
+                <p>Navega de forma segura y privada por internet con Ultraviolet</p>
+                <div id="connection-status" class="connection-warning" style="display: none;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span>Conectando con el servidor...</span>
+                </div>
+            </div>
+
+            <div class="sites-grid">
+                <div class="site-card" data-url="https://www.google.com">
+                    <div class="site-icon">🔍</div>
+                    <div class="site-name">Google</div>
+                </div>
+                <div class="site-card" data-url="https://www.youtube.com">
+                    <div class="site-icon">▶️</div>
+                    <div class="site-name">YouTube</div>
+                </div>
+                <div class="site-card" data-url="https://discord.com">
+                    <div class="site-icon">💬</div>
+                    <div class="site-name">Discord</div>
+                </div>
+                <div class="site-card" data-url="https://www.reddit.com">
+                    <div class="site-icon">🤖</div>
+                    <div class="site-name">Reddit</div>
+                </div>
+                <div class="site-card" data-url="https://twitter.com">
+                    <div class="site-icon">🐦</div>
+                    <div class="site-name">Twitter</div>
+                </div>
+                <div class="site-card" data-url="https://github.com">
+                    <div class="site-icon">💻</div>
+                    <div class="site-name">GitHub</div>
+                </div>
+                <div class="site-card" data-url="https://wikipedia.org">
+                    <div class="site-icon">📚</div>
+                    <div class="site-name">Wikipedia</div>
+                </div>
+                <div class="site-card" data-url="https://netflix.com">
+                    <div class="site-icon">🎬</div>
+                    <div class="site-name">Netflix</div>
+                </div>
+            </div>
+
+            <div class="features-card">
+                <h3>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    Características de Zephiryx
+                </h3>
+                <ul>
+                    <li><span class="dot"></span>Powered by Ultraviolet - Tecnología de proxy avanzada</li>
+                    <li><span class="dot"></span>Service Workers para máxima compatibilidad</li>
+                    <li><span class="dot"></span>Soporte para CAPTCHA y hCAPTCHA</li>
+                    <li><span class="dot"></span>Funciona con YouTube, Discord, Netflix y más</li>
+                    <li><span class="dot"></span>Historial y favoritos integrados</li>
+                    <li><span class="dot"></span>Backend en Railway + Frontend en GitHub Pages</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="loading-screen" style="display: none;">
+            <div class="loading-content">
+                <svg class="spinner" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <polyline points="1 20 1 14 7 14"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                <p class="loading-text">Cargando sitio web...</p>
+                <p class="loading-subtext">Conectando con Ultraviolet</p>
+            </div>
+        </div>
+
+        <!-- Proxy Frame -->
+        <iframe id="proxy-frame" style="display: none;"></iframe>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
