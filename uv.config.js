@@ -1,7 +1,7 @@
-// Configuración de Ultraviolet para GitHub Pages
+// Configuración de Ultraviolet
 self.__uv$config = {
   prefix: '/service/',
-  bare: 'https://zephiryxproxy-production.up.railway.app/bare/',
+  bare: '/bare/',
   encodeUrl: Ultraviolet.codec.xor.encode,
   decodeUrl: Ultraviolet.codec.xor.decode,
   handler: '/uv/uv.handler.js',
