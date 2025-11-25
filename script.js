@@ -5,7 +5,6 @@ const BACKEND_URL = 'https://zephiryxproxy-production.up.railway.app';
 let history = [];
 let favorites = JSON.parse(localStorage.getItem('zephiryx-favorites') || '[]');
 let historyIndex = -1;
-let swReady = false;
 
 // Elementos DOM
 const urlInput = document.getElementById('url-input');
@@ -36,96 +35,33 @@ const proxyFrame = document.getElementById('proxy-frame');
 // Verificar conexión con el backend
 async function checkBackendConnection() {
     try {
+        updateStatus('Conectando...');
         connectionStatus.style.display = 'flex';
+        
         const response = await fetch(`${BACKEND_URL}/`, { 
-            method: 'HEAD',
-            mode: 'no-cors'
+            method: 'GET',
+            mode: 'cors'
         });
-        connectionStatus.style.display = 'none';
-        return true;
+        
+        if (response.ok) {
+            updateStatus('✓ Conectado y listo');
+            goBtn.disabled = false;
+            connectionStatus.style.display = 'none';
+            return true;
+        }
     } catch (error) {
         console.error('Error conectando con backend:', error);
+        updateStatus('Error de conexión');
         connectionStatus.innerHTML = `
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="15" y1="9" x2="9" y2="15"/>
                 <line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
-            <span>Verificando conexión con Railway...</span>
+            <span>No se pudo conectar con Railway. Verifica que el backend esté activo en: ${BACKEND_URL}</span>
         `;
         connectionStatus.style.display = 'flex';
-        return true; // Continuar de todas formas
-    }
-}
-
-// Registrar Service Worker
-async function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        try {
-            await checkBackendConnection();
-            updateStatus('Iniciando proxy...');
-            
-            // El Service Worker ahora se cargará desde el backend
-            const swUrl = `${BACKEND_URL}/uv/uv.sw.js`;
-            
-            const registration = await navigator.serviceWorker.register(swUrl, {
-                scope: '/service/',
-                type: 'classic'
-            });
-
-            // Función para verificar si el SW está activo
-            const checkSWReady = () => {
-                if (registration.active) {
-                    swReady = true;
-                    updateStatus('✓ Conectado y listo');
-                    goBtn.disabled = false;
-                    connectionStatus.style.display = 'none';
-                    return true;
-                }
-                return false;
-            };
-
-            // Verificar inmediatamente
-            if (checkSWReady()) return;
-
-            // Esperar a que se active
-            if (registration.installing) {
-                registration.installing.addEventListener('statechange', function() {
-                    if (this.state === 'activated') {
-                        checkSWReady();
-                    }
-                });
-            } else if (registration.waiting) {
-                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                registration.waiting.addEventListener('statechange', function() {
-                    if (this.state === 'activated') {
-                        checkSWReady();
-                    }
-                });
-            }
-
-            // Timeout de seguridad
-            setTimeout(() => {
-                if (!swReady && registration.active) {
-                    checkSWReady();
-                }
-            }, 2000);
-
-        } catch (error) {
-            console.error('Error registrando Service Worker:', error);
-            updateStatus('Iniciando proxy...');
-            
-            // Intentar de todas formas después de un delay
-            setTimeout(() => {
-                swReady = true;
-                updateStatus('✓ Modo directo activo');
-                goBtn.disabled = false;
-                connectionStatus.style.display = 'none';
-            }, 1000);
-        }
-    } else {
-        updateStatus('Navegador no compatible');
-        alert('Tu navegador no soporta Service Workers. Usa Chrome, Firefox o Edge moderno.');
+        return false;
     }
 }
 
@@ -133,12 +69,18 @@ function updateStatus(text) {
     statusText.textContent = text;
 }
 
-// Codificar URL para Ultraviolet
-function encodeUrl(url) {
-    return encodeURIComponent(url);
+// Crear iframe para cargar el proxy del backend
+function createProxyIframe() {
+    const iframe = document.createElement('iframe');
+    iframe.id = 'backend-frame';
+    iframe.style.cssText = 'position:absolute;width:100%;height:100%;border:none;';
+    iframe.src = BACKEND_URL;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    return iframe;
 }
 
-// Navegar a URL
+// Navegar a URL - Solución: redirigir al backend directamente
 function navigate(url) {
     if (!url) return;
 
@@ -147,18 +89,15 @@ function navigate(url) {
         formattedUrl = 'https://' + url;
     }
 
-    if (!swReady) {
-        alert('Espera un momento mientras se inicializa el proxy...');
-        return;
-    }
-
     // Mostrar loading
     homePage.style.display = 'none';
     loadingScreen.style.display = 'flex';
     proxyFrame.style.display = 'none';
 
-    // Generar URL proxeada
-    const proxyUrl = `${BACKEND_URL}/service/${encodeUrl(formattedUrl)}`;
+    // SOLUCIÓN: Redirigir directamente al backend con el proxy
+    // El backend manejará todo internamente con su Service Worker
+    const encodedUrl = encodeURIComponent(formattedUrl);
+    const proxyUrl = `${BACKEND_URL}/#q=${encodedUrl}`;
     
     // Actualizar historial
     const newHistory = history.slice(0, historyIndex + 1);
@@ -166,7 +105,7 @@ function navigate(url) {
     history = newHistory;
     historyIndex = newHistory.length - 1;
 
-    // Cargar en iframe
+    // Cargar en iframe apuntando al backend
     proxyFrame.src = proxyUrl;
     urlInput.value = formattedUrl;
     
@@ -204,7 +143,8 @@ function goBack() {
         urlInput.value = url;
         loadingScreen.style.display = 'flex';
         proxyFrame.style.display = 'none';
-        proxyFrame.src = `${BACKEND_URL}/service/${encodeUrl(url)}`;
+        const encodedUrl = encodeURIComponent(url);
+        proxyFrame.src = `${BACKEND_URL}/#q=${encodedUrl}`;
         updateNavigationButtons();
         updateStarButton();
     }
@@ -218,7 +158,8 @@ function goForward() {
         urlInput.value = url;
         loadingScreen.style.display = 'flex';
         proxyFrame.style.display = 'none';
-        proxyFrame.src = `${BACKEND_URL}/service/${encodeUrl(url)}`;
+        const encodedUrl = encodeURIComponent(url);
+        proxyFrame.src = `${BACKEND_URL}/#q=${encodedUrl}`;
         updateNavigationButtons();
         updateStarButton();
     }
@@ -230,7 +171,8 @@ function refresh() {
         const url = history[historyIndex];
         loadingScreen.style.display = 'flex';
         proxyFrame.style.display = 'none';
-        proxyFrame.src = `${BACKEND_URL}/service/${encodeUrl(url)}`;
+        const encodedUrl = encodeURIComponent(url);
+        proxyFrame.src = `${BACKEND_URL}/#q=${encodedUrl}`;
     }
 }
 
@@ -275,7 +217,6 @@ function renderHistory() {
         </div>
     `).join('');
 
-    // Event listeners
     document.querySelectorAll('#history-list .sidebar-item').forEach(item => {
         item.addEventListener('click', () => {
             const url = item.dataset.url;
@@ -305,7 +246,6 @@ function renderFavorites() {
         </div>
     `).join('');
 
-    // Event listeners para navegar
     document.querySelectorAll('#favorites-list .sidebar-item-text').forEach(item => {
         item.addEventListener('click', () => {
             const url = item.dataset.url;
@@ -315,7 +255,6 @@ function renderFavorites() {
         });
     });
 
-    // Event listeners para eliminar
     document.querySelectorAll('#favorites-list .delete-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -334,7 +273,7 @@ urlInput.addEventListener('input', (e) => {
 });
 
 urlInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && swReady) {
+    if (e.key === 'Enter') {
         navigate(urlInput.value);
     }
 });
@@ -376,13 +315,9 @@ closeFavorites.addEventListener('click', () => {
 // Site cards
 document.querySelectorAll('.site-card').forEach(card => {
     card.addEventListener('click', () => {
-        if (swReady) {
-            const url = card.dataset.url;
-            urlInput.value = url;
-            navigate(url);
-        } else {
-            alert('Iniciando proxy, espera un momento...');
-        }
+        const url = card.dataset.url;
+        urlInput.value = url;
+        navigate(url);
     });
 });
 
@@ -392,13 +327,6 @@ proxyFrame.addEventListener('load', () => {
     proxyFrame.style.display = 'block';
 });
 
-// Manejo de errores del iframe
-proxyFrame.addEventListener('error', () => {
-    loadingScreen.style.display = 'none';
-    alert('Error al cargar el sitio. Verifica que el backend esté funcionando.');
-    goHome();
-});
-
 // Inicializar
-registerServiceWorker();
+checkBackendConnection();
 renderFavorites();
