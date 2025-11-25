@@ -1,0 +1,533 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --emerald-950: #022c22;
+    --emerald-900: #064e3b;
+    --emerald-800: #065f46;
+    --emerald-700: #047857;
+    --emerald-600: #059669;
+    --emerald-500: #10b981;
+    --emerald-400: #34d399;
+    --emerald-300: #6ee7b7;
+    --teal-800: #115e59;
+    --teal-700: #0f766e;
+    --teal-600: #0d9488;
+    --teal-500: #14b8a6;
+    --yellow-400: #facc15;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(to bottom right, var(--emerald-950), #064e3b, var(--teal-800));
+    min-height: 100vh;
+    color: white;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Header Styles */
+.header {
+    background: linear-gradient(to right, var(--emerald-800), var(--teal-800));
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border-bottom: 2px solid var(--emerald-400);
+    padding: 1rem 0;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    background: linear-gradient(to bottom right, var(--emerald-400), var(--teal-500));
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.brand-text h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    background: linear-gradient(to right, var(--emerald-300), #99f6e4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--emerald-300);
+    font-size: 0.875rem;
+}
+
+.status-icon {
+    font-size: 0.75rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.icon-btn {
+    padding: 0.5rem;
+    background: transparent;
+    border: none;
+    color: white;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background: var(--emerald-700);
+}
+
+.icon-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Navigation Bar */
+.nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(2, 44, 34, 0.5);
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    backdrop-filter: blur(10px);
+}
+
+.nav-btn {
+    padding: 0.5rem;
+    background: transparent;
+    border: none;
+    color: white;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: var(--emerald-700);
+}
+
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.url-bar {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: rgba(6, 78, 59, 0.5);
+    border: 1px solid var(--emerald-600);
+    border-radius: 0.5rem;
+    padding: 0 1rem;
+    gap: 0.5rem;
+}
+
+.url-icon {
+    color: var(--emerald-400);
+    flex-shrink: 0;
+}
+
+.url-bar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    padding: 0.75rem 0;
+    font-size: 1rem;
+}
+
+.url-bar input::placeholder {
+    color: var(--emerald-400);
+}
+
+.clear-btn {
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+}
+
+.clear-btn:hover {
+    background: var(--emerald-700);
+}
+
+.go-btn {
+    background: linear-gradient(to right, var(--emerald-500), var(--teal-500));
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.go-btn:hover {
+    background: linear-gradient(to right, var(--emerald-600), var(--teal-600));
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.go-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    right: -320px;
+    top: 0;
+    height: 100vh;
+    width: 320px;
+    background: var(--emerald-900);
+    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+    border-left: 2px solid var(--emerald-400);
+    z-index: 1000;
+    transition: right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.active {
+    right: 0;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--emerald-700);
+}
+
+.sidebar-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+}
+
+.close-sidebar {
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+}
+
+.close-sidebar:hover {
+    background: var(--emerald-800);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--emerald-800);
+    cursor: pointer;
+    transition: all 0.2s;
+    word-break: break-all;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-item:hover {
+    background: var(--emerald-800);
+}
+
+.sidebar-item-text {
+    flex: 1;
+    font-size: 0.875rem;
+}
+
+.delete-btn {
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+    opacity: 0;
+}
+
+.sidebar-item:hover .delete-btn {
+    opacity: 1;
+}
+
+.delete-btn:hover {
+    background: var(--emerald-700);
+    color: #ef4444;
+}
+
+.empty-message {
+    padding: 1rem;
+    color: var(--emerald-300);
+    text-align: center;
+}
+
+/* Main Content */
+.main-content {
+    padding: 2rem 1rem;
+    min-height: calc(100vh - 200px);
+}
+
+/* Home Page */
+.home-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.hero {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.hero h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    background: linear-gradient(to right, var(--emerald-300), #99f6e4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+}
+
+.hero p {
+    color: var(--emerald-300);
+    font-size: 1.25rem;
+}
+
+.sites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.site-card {
+    background: linear-gradient(to bottom right, var(--emerald-800), var(--teal-800));
+    padding: 2rem 1rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid var(--emerald-600);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.site-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.site-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.site-name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.features-card {
+    background: rgba(6, 78, 59, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--emerald-700);
+    border-radius: 0.75rem;
+    padding: 2rem;
+}
+
+.features-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--emerald-400);
+}
+
+.features-card ul {
+    list-style: none;
+    color: #d1fae5;
+}
+
+.features-card li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    background: var(--emerald-400);
+    border-radius: 50%;
+    margin-top: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Loading Screen */
+.loading-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    background: rgba(236, 253, 245, 0.05);
+    border-radius: 0.75rem;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.spinner {
+    color: var(--emerald-600);
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-text {
+    color: var(--emerald-800);
+    font-weight: 600;
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+}
+
+.loading-subtext {
+    color: var(--emerald-600);
+    font-size: 0.875rem;
+}
+
+/* Proxy Frame */
+#proxy-frame {
+    width: 100%;
+    height: calc(100vh - 200px);
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    background: white;
+}
+
+/* Star Button Active State */
+.icon-btn.active svg {
+    fill: var(--yellow-400);
+    stroke: var(--yellow-400);
+}
+
+/* Connection Warning */
+.connection-warning {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(251, 191, 36, 0.2);
+    border: 1px solid #fbbf24;
+    color: #fef3c7;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
+.connection-warning svg {
+    flex-shrink: 0;
+    color: #fbbf24;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .brand-text h1 {
+        font-size: 1.5rem;
+    }
+
+    .hero h2 {
+        font-size: 2rem;
+    }
+
+    .sites-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .site-card {
+        padding: 1.5rem 0.75rem;
+    }
+
+    .site-icon {
+        font-size: 2.5rem;
+    }
+
+    .nav-bar {
+        flex-wrap: wrap;
+    }
+
+    .url-bar {
+        order: 3;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Scrollbar Styles */
+.sidebar-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: var(--emerald-950);
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: var(--emerald-600);
+    border-radius: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: var(--emerald-500);
+}
