@@ -5,6 +5,7 @@ const BACKEND_URL = 'https://zephiryxproxy-production.up.railway.app';
 let history = [];
 let favorites = JSON.parse(localStorage.getItem('zephiryx-favorites') || '[]');
 let historyIndex = -1;
+let loadingTimeout;
 
 // Elementos DOM
 const urlInput = document.getElementById('url-input');
@@ -35,12 +36,12 @@ const proxyFrame = document.getElementById('proxy-frame');
 // Verificar conexión con el backend
 async function checkBackendConnection() {
     try {
-        updateStatus('Conectando...');
+        updateStatus('Verificando conexión...');
         connectionStatus.style.display = 'flex';
         
         const response = await fetch(`${BACKEND_URL}/`, { 
             method: 'GET',
-            mode: 'cors'
+            cache: 'no-cache'
         });
         
         if (response.ok) {
@@ -48,19 +49,22 @@ async function checkBackendConnection() {
             goBtn.disabled = false;
             connectionStatus.style.display = 'none';
             return true;
+        } else {
+            throw new Error('Backend no responde correctamente');
         }
     } catch (error) {
         console.error('Error conectando con backend:', error);
-        updateStatus('Error de conexión');
+        updateStatus('⚠️ Error de conexión');
         connectionStatus.innerHTML = `
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="15" y1="9" x2="9" y2="15"/>
                 <line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
-            <span>No se pudo conectar con Railway. Verifica que el backend esté activo en: ${BACKEND_URL}</span>
+            <span>No se pudo conectar con Railway. Verifica que el backend esté activo: <a href="${BACKEND_URL}" target="_blank" style="color: #fbbf24; text-decoration: underline;">${BACKEND_URL}</a></span>
         `;
         connectionStatus.style.display = 'flex';
+        goBtn.disabled = true;
         return false;
     }
 }
@@ -69,18 +73,19 @@ function updateStatus(text) {
     statusText.textContent = text;
 }
 
-// Crear iframe para cargar el proxy del backend
-function createProxyIframe() {
-    const iframe = document.createElement('iframe');
-    iframe.id = 'backend-frame';
-    iframe.style.cssText = 'position:absolute;width:100%;height:100%;border:none;';
-    iframe.src = BACKEND_URL;
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    return iframe;
+// Timeout de seguridad para el loading
+function setLoadingTimeout() {
+    clearTimeout(loadingTimeout);
+    loadingTimeout = setTimeout(() => {
+        if (loadingScreen.style.display === 'flex') {
+            console.log('Timeout alcanzado, mostrando iframe');
+            loadingScreen.style.display = 'none';
+            proxyFrame.style.display = 'block';
+        }
+    }, 8000); // 8 segundos máximo
 }
 
-// Navegar a URL - Solución: redirigir al backend directamente
+// Navegar a URL
 function navigate(url) {
     if (!url) return;
 
@@ -94,10 +99,12 @@ function navigate(url) {
     loadingScreen.style.display = 'flex';
     proxyFrame.style.display = 'none';
 
-    // SOLUCIÓN: Redirigir directamente al backend con el proxy
-    // El backend manejará todo internamente con su Service Worker
+    // URL del backend con hash
     const encodedUrl = encodeURIComponent(formattedUrl);
     const proxyUrl = `${BACKEND_URL}/#q=${encodedUrl}`;
+    
+    console.log('Navegando a:', formattedUrl);
+    console.log('URL del proxy:', proxyUrl);
     
     // Actualizar historial
     const newHistory = history.slice(0, historyIndex + 1);
@@ -105,9 +112,12 @@ function navigate(url) {
     history = newHistory;
     historyIndex = newHistory.length - 1;
 
-    // Cargar en iframe apuntando al backend
+    // Cargar en iframe
     proxyFrame.src = proxyUrl;
     urlInput.value = formattedUrl;
+    
+    // Establecer timeout de seguridad
+    setLoadingTimeout();
     
     // Actualizar botones
     updateNavigationButtons();
@@ -145,6 +155,7 @@ function goBack() {
         proxyFrame.style.display = 'none';
         const encodedUrl = encodeURIComponent(url);
         proxyFrame.src = `${BACKEND_URL}/#q=${encodedUrl}`;
+        setLoadingTimeout();
         updateNavigationButtons();
         updateStarButton();
     }
@@ -160,6 +171,7 @@ function goForward() {
         proxyFrame.style.display = 'none';
         const encodedUrl = encodeURIComponent(url);
         proxyFrame.src = `${BACKEND_URL}/#q=${encodedUrl}`;
+        setLoadingTimeout();
         updateNavigationButtons();
         updateStarButton();
     }
@@ -173,6 +185,7 @@ function refresh() {
         proxyFrame.style.display = 'none';
         const encodedUrl = encodeURIComponent(url);
         proxyFrame.src = `${BACKEND_URL}/#q=${encodedUrl}`;
+        setLoadingTimeout();
     }
 }
 
@@ -181,8 +194,10 @@ function goHome() {
     homePage.style.display = 'block';
     loadingScreen.style.display = 'none';
     proxyFrame.style.display = 'none';
+    proxyFrame.src = '';
     urlInput.value = '';
     starBtn.style.display = 'none';
+    clearTimeout(loadingTimeout);
 }
 
 // Toggle favorito
@@ -273,13 +288,15 @@ urlInput.addEventListener('input', (e) => {
 });
 
 urlInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !goBtn.disabled) {
         navigate(urlInput.value);
     }
 });
 
 goBtn.addEventListener('click', () => {
-    navigate(urlInput.value);
+    if (!goBtn.disabled) {
+        navigate(urlInput.value);
+    }
 });
 
 clearBtn.addEventListener('click', () => {
@@ -315,18 +332,42 @@ closeFavorites.addEventListener('click', () => {
 // Site cards
 document.querySelectorAll('.site-card').forEach(card => {
     card.addEventListener('click', () => {
-        const url = card.dataset.url;
-        urlInput.value = url;
-        navigate(url);
+        if (!goBtn.disabled) {
+            const url = card.dataset.url;
+            urlInput.value = url;
+            navigate(url);
+        } else {
+            alert('Conectando con el servidor, espera un momento...');
+        }
     });
 });
 
-// Iframe load event
+// Iframe load event - con timeout de seguridad
 proxyFrame.addEventListener('load', () => {
-    loadingScreen.style.display = 'none';
-    proxyFrame.style.display = 'block';
+    clearTimeout(loadingTimeout);
+    // Pequeño delay para que el contenido se renderice
+    setTimeout(() => {
+        loadingScreen.style.display = 'none';
+        proxyFrame.style.display = 'block';
+    }, 1000);
 });
 
-// Inicializar
+// Manejo de errores del iframe
+proxyFrame.addEventListener('error', (e) => {
+    console.error('Error en iframe:', e);
+    clearTimeout(loadingTimeout);
+    loadingScreen.style.display = 'none';
+    alert('Error al cargar el sitio. Posibles causas:\n\n1. El backend de Railway no está activo\n2. El sitio web bloquea ser cargado en iframes\n3. Problema de conexión\n\nIntenta con otro sitio o verifica Railway.');
+    goHome();
+});
+
+// Inicializar - Verificar conexión al cargar la página
 checkBackendConnection();
 renderFavorites();
+
+// Re-verificar conexión cada 30 segundos
+setInterval(() => {
+    if (goBtn.disabled) {
+        checkBackendConnection();
+    }
+}, 30000);
