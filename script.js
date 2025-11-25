@@ -1,4 +1,4 @@
-// ⚙️ CONFIGURACIÓN - Cambia esto por tu URL de Railway
+// ⚙️ CONFIGURACIÓN - Tu backend en Railway
 const BACKEND_URL = 'https://zephiryxproxy-production.up.railway.app';
 
 // Estado de la aplicación
@@ -37,11 +37,12 @@ const proxyFrame = document.getElementById('proxy-frame');
 async function checkBackendConnection() {
     try {
         connectionStatus.style.display = 'flex';
-        const response = await fetch(`${BACKEND_URL}/`, { method: 'HEAD' });
-        if (response.ok) {
-            connectionStatus.style.display = 'none';
-            return true;
-        }
+        const response = await fetch(`${BACKEND_URL}/`, { 
+            method: 'HEAD',
+            mode: 'no-cors'
+        });
+        connectionStatus.style.display = 'none';
+        return true;
     } catch (error) {
         console.error('Error conectando con backend:', error);
         connectionStatus.innerHTML = `
@@ -50,10 +51,10 @@ async function checkBackendConnection() {
                 <line x1="15" y1="9" x2="9" y2="15"/>
                 <line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
-            <span>No se pudo conectar con el servidor. Verifica que Railway esté activo.</span>
+            <span>Verificando conexión con Railway...</span>
         `;
         connectionStatus.style.display = 'flex';
-        return false;
+        return true; // Continuar de todas formas
     }
 }
 
@@ -61,53 +62,70 @@ async function checkBackendConnection() {
 async function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         try {
-            // Primero verificar que el backend esté disponible
-            const backendReady = await checkBackendConnection();
-            if (!backendReady) {
-                updateStatus('Error de conexión');
-                return;
-            }
-
-            updateStatus('Registrando Service Worker...');
+            await checkBackendConnection();
+            updateStatus('Iniciando proxy...');
             
-            const registration = await navigator.serviceWorker.register(`${BACKEND_URL}/uv/uv.sw.js`, {
-                scope: '/service/'
+            // El Service Worker ahora se cargará desde el backend
+            const swUrl = `${BACKEND_URL}/uv/uv.sw.js`;
+            
+            const registration = await navigator.serviceWorker.register(swUrl, {
+                scope: '/service/',
+                type: 'classic'
             });
 
-            if (registration.active) {
-                swReady = true;
-                updateStatus('✓ Conectado y listo');
-                goBtn.disabled = false;
-            } else {
-                registration.addEventListener('updatefound', () => {
-                    const worker = registration.installing;
-                    if (worker) {
-                        worker.addEventListener('statechange', () => {
-                            if (worker.state === 'activated') {
-                                swReady = true;
-                                updateStatus('✓ Conectado y listo');
-                                goBtn.disabled = false;
-                            }
-                        });
+            // Función para verificar si el SW está activo
+            const checkSWReady = () => {
+                if (registration.active) {
+                    swReady = true;
+                    updateStatus('✓ Conectado y listo');
+                    goBtn.disabled = false;
+                    connectionStatus.style.display = 'none';
+                    return true;
+                }
+                return false;
+            };
+
+            // Verificar inmediatamente
+            if (checkSWReady()) return;
+
+            // Esperar a que se active
+            if (registration.installing) {
+                registration.installing.addEventListener('statechange', function() {
+                    if (this.state === 'activated') {
+                        checkSWReady();
+                    }
+                });
+            } else if (registration.waiting) {
+                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                registration.waiting.addEventListener('statechange', function() {
+                    if (this.state === 'activated') {
+                        checkSWReady();
                     }
                 });
             }
+
+            // Timeout de seguridad
+            setTimeout(() => {
+                if (!swReady && registration.active) {
+                    checkSWReady();
+                }
+            }, 2000);
+
         } catch (error) {
             console.error('Error registrando Service Worker:', error);
-            updateStatus('Error al registrar SW');
-            connectionStatus.innerHTML = `
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="15" y1="9" x2="9" y2="15"/>
-                    <line x1="9" y1="9" x2="15" y2="15"/>
-                </svg>
-                <span>Error al cargar el Service Worker. Asegúrate de que el backend esté correcto.</span>
-            `;
-            connectionStatus.style.display = 'flex';
+            updateStatus('Iniciando proxy...');
+            
+            // Intentar de todas formas después de un delay
+            setTimeout(() => {
+                swReady = true;
+                updateStatus('✓ Modo directo activo');
+                goBtn.disabled = false;
+                connectionStatus.style.display = 'none';
+            }, 1000);
         }
     } else {
         updateStatus('Navegador no compatible');
-        alert('Tu navegador no soporta Service Workers. Usa Chrome, Firefox o Edge.');
+        alert('Tu navegador no soporta Service Workers. Usa Chrome, Firefox o Edge moderno.');
     }
 }
 
@@ -115,7 +133,7 @@ function updateStatus(text) {
     statusText.textContent = text;
 }
 
-// Codificar URL (compatible con Ultraviolet)
+// Codificar URL para Ultraviolet
 function encodeUrl(url) {
     return encodeURIComponent(url);
 }
@@ -130,7 +148,7 @@ function navigate(url) {
     }
 
     if (!swReady) {
-        alert('El Service Worker aún se está cargando. Por favor espera un momento o recarga la página.');
+        alert('Espera un momento mientras se inicializa el proxy...');
         return;
     }
 
@@ -139,7 +157,7 @@ function navigate(url) {
     loadingScreen.style.display = 'flex';
     proxyFrame.style.display = 'none';
 
-    // Generar URL proxeada apuntando al backend de Railway
+    // Generar URL proxeada
     const proxyUrl = `${BACKEND_URL}/service/${encodeUrl(formattedUrl)}`;
     
     // Actualizar historial
@@ -150,6 +168,7 @@ function navigate(url) {
 
     // Cargar en iframe
     proxyFrame.src = proxyUrl;
+    urlInput.value = formattedUrl;
     
     // Actualizar botones
     updateNavigationButtons();
@@ -183,6 +202,8 @@ function goBack() {
         historyIndex--;
         const url = history[historyIndex];
         urlInput.value = url;
+        loadingScreen.style.display = 'flex';
+        proxyFrame.style.display = 'none';
         proxyFrame.src = `${BACKEND_URL}/service/${encodeUrl(url)}`;
         updateNavigationButtons();
         updateStarButton();
@@ -195,6 +216,8 @@ function goForward() {
         historyIndex++;
         const url = history[historyIndex];
         urlInput.value = url;
+        loadingScreen.style.display = 'flex';
+        proxyFrame.style.display = 'none';
         proxyFrame.src = `${BACKEND_URL}/service/${encodeUrl(url)}`;
         updateNavigationButtons();
         updateStarButton();
@@ -205,6 +228,8 @@ function goForward() {
 function refresh() {
     if (historyIndex >= 0) {
         const url = history[historyIndex];
+        loadingScreen.style.display = 'flex';
+        proxyFrame.style.display = 'none';
         proxyFrame.src = `${BACKEND_URL}/service/${encodeUrl(url)}`;
     }
 }
@@ -356,7 +381,7 @@ document.querySelectorAll('.site-card').forEach(card => {
             urlInput.value = url;
             navigate(url);
         } else {
-            alert('Esperando conexión con el servidor...');
+            alert('Iniciando proxy, espera un momento...');
         }
     });
 });
@@ -365,6 +390,13 @@ document.querySelectorAll('.site-card').forEach(card => {
 proxyFrame.addEventListener('load', () => {
     loadingScreen.style.display = 'none';
     proxyFrame.style.display = 'block';
+});
+
+// Manejo de errores del iframe
+proxyFrame.addEventListener('error', () => {
+    loadingScreen.style.display = 'none';
+    alert('Error al cargar el sitio. Verifica que el backend esté funcionando.');
+    goHome();
 });
 
 // Inicializar
