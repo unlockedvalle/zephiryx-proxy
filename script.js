@@ -370,4 +370,4 @@ setInterval(() => {
     if (goBtn.disabled) {
         checkBackendConnection();
     }
-}, 30000);
+}, 30000);    
